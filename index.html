@@ -7,6 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
 :root {
   --sidebar-bg: #1c1917;
@@ -820,6 +824,69 @@ body { display: flex; background: var(--main-bg); color: var(--text-primary); }
   animation: spin .8s linear infinite;
 }
 
+/* Symbol Picker */
+.symbol-picker {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--editor-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 200;
+  width: 280px;
+  padding: 8px;
+}
+.symbol-picker.open { display: block; }
+
+.sp-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.sp-tab {
+  padding: 3px 7px;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all .12s;
+}
+.sp-tab:hover { border-color: var(--accent); color: var(--accent); }
+.sp-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.sp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.sp-sym {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: all .1s;
+  user-select: none;
+}
+.sp-sym:hover { background: var(--accent-light); border-color: var(--accent); }
+
+/* Highlight in preview */
+#previewPane mark { background: #fef08a; padding: .05em .2em; border-radius: 2px; }
+
+/* Mermaid in preview */
+#previewPane .mermaid { text-align: center; margin: 1em 0; }
+#previewPane .mermaid svg { max-width: 100%; }
+
+/* KaTeX */
+#previewPane .katex-display { margin: 1em 0; overflow-x: auto; }
+
 /* Responsive */
 @media (max-width: 768px) {
   #sidebar { width: 220px; min-width: 220px; }
@@ -897,6 +964,7 @@ body { display: flex; background: var(--main-bg); color: var(--text-primary); }
         <button class="tb-btn" data-cmd="italic" title="Cursiva"><i>I</i></button>
         <button class="tb-btn" data-cmd="strikethrough" title="Tachado"><s>S</s></button>
         <button class="tb-btn" data-cmd="underline" title="Subrayado (HTML)"><u>U</u></button>
+        <button class="tb-btn" data-cmd="highlight" title="Resaltado">▐H</button>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
@@ -907,14 +975,31 @@ body { display: flex; background: var(--main-bg); color: var(--text-primary); }
       <div class="tb-sep"></div>
       <div class="tb-group">
         <button class="tb-btn" data-cmd="quote" title="Cita">" Cita</button>
-        <button class="tb-btn" data-cmd="code" title="Código inline">` ` `</button>
+        <button class="tb-btn" data-cmd="code" title="Código inline">` `</button>
         <button class="tb-btn" data-cmd="codeblock" title="Bloque de código">{ }</button>
+        <button class="tb-btn" data-cmd="mermaid" title="Diagrama Mermaid">⬡ Diagrama</button>
+        <button class="tb-btn" data-cmd="math" title="Fórmula LaTeX">∑ Math</button>
         <button class="tb-btn" data-cmd="table" title="Tabla">⊞ Tabla</button>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
         <button class="tb-btn" data-cmd="link" title="Enlace">🔗 Link</button>
+        <button class="tb-btn" data-cmd="image" title="Imagen (URL)">🖼 Img</button>
         <button class="tb-btn" data-cmd="hr" title="Línea horizontal">—</button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group" style="position:relative">
+        <button class="tb-btn" id="btnSymbolPicker" title="Símbolos y emojis">① ★</button>
+        <div id="symbolPicker" class="symbol-picker">
+          <div class="sp-tabs">
+            <button class="sp-tab active" data-cat="num">① Núm.</button>
+            <button class="sp-tab" data-cat="status">● Estado</button>
+            <button class="sp-tab" data-cat="office">📌 Oficina</button>
+            <button class="sp-tab" data-cat="arrows">→ Flechas</button>
+            <button class="sp-tab" data-cat="geo">◆ Geo</button>
+          </div>
+          <div class="sp-grid" id="spGrid"></div>
+        </div>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
@@ -1563,6 +1648,9 @@ Instrucciones:
 - Usa encabezados Markdown (##, ###) para organizar secciones naturales
 - Si hay tareas o acuerdos, resáltalos con viñetas o checkboxes [ ]
 - Si hay fechas o personas mencionadas, mantenlas
+- Si hay diagramas, flujos o esquemas en el documento, represéntalos como bloques Mermaid (```mermaid ... ```)
+- Si hay fórmulas matemáticas, usa notación LaTeX entre $$ ... $$
+- Usa emojis de oficina (① ② ③ ✅ ⚠️ 📌 🎯 etc.) donde aporten claridad visual
 - Produce SOLO el contenido Markdown, sin explicaciones adicionales ni bloques de código envolventes`;
 
     if (isImage) {
@@ -1770,9 +1858,39 @@ function onEditorChange() {
 }
 
 function updatePreview() {
-  const content = document.getElementById('editorTextarea').value;
+  const src = document.getElementById('editorTextarea').value;
   const pane = document.getElementById('previewPane');
-  pane.innerHTML = marked.parse(content);
+
+  // Pre-process: highlight ==text==
+  let processed = src.replace(/==(.+?)==/g, '<mark>$1</mark>');
+
+  // Render markdown (marked handles ```mermaid blocks as <code class="language-mermaid">)
+  pane.innerHTML = marked.parse(processed);
+
+  // Render Mermaid diagrams
+  pane.querySelectorAll('code.language-mermaid').forEach((el, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mermaid';
+    wrapper.id = `mermaid-${Date.now()}-${i}`;
+    wrapper.textContent = el.textContent;
+    el.parentElement.replaceWith(wrapper);
+  });
+  if (typeof mermaid !== 'undefined') {
+    try { mermaid.run({ nodes: pane.querySelectorAll('.mermaid') }); } catch(e) {}
+  }
+
+  // Render KaTeX math $$...$$
+  if (typeof renderMathInElement !== 'undefined') {
+    try {
+      renderMathInElement(pane, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false }
+        ],
+        throwOnError: false
+      });
+    } catch(e) {}
+  }
 }
 
 function updateSaveStatus() {
@@ -2113,6 +2231,59 @@ function bindEvents() {
     e.target.value = '';
   };
 
+  // Symbol picker
+  const SYMBOLS = {
+    num:    ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','❶','❷','❸','❹','❺','❻','❼','❽','❾','❿'],
+    status: ['✅','❌','⚠️','🔴','🟡','🟢','🔵','⭕','🔲','🔳','💬','📢','🚨','🔔','⛔','✔️','✖️','❓','❗','💯'],
+    office: ['📌','📎','🗂️','📋','📊','📈','📉','💡','🎯','🔑','⚡','🗝️','📝','🖊️','🗒️','📅','🕐','👤','👥','🤝'],
+    arrows: ['→','←','↑','↓','↔','↕','⇒','⇐','⇔','⟶','⟵','⟷','↗','↘','↙','↖','➡','⬅','⬆','⬇','▶','◀','▲','▼'],
+    geo:    ['◆','◇','■','□','▪','▫','●','○','▸','▹','★','☆','✦','✧','•','‣','–','—','≡','∞','∑','∆','∇','∈']
+  };
+
+  let currentCat = 'num';
+
+  function renderSymbols(cat) {
+    currentCat = cat;
+    const grid = document.getElementById('spGrid');
+    grid.innerHTML = SYMBOLS[cat].map(s =>
+      `<div class="sp-sym" data-sym="${s}">${s}</div>`
+    ).join('');
+    document.querySelectorAll('.sp-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.cat === cat)
+    );
+  }
+
+  document.getElementById('btnSymbolPicker').onclick = (e) => {
+    e.stopPropagation();
+    const picker = document.getElementById('symbolPicker');
+    const isOpen = picker.classList.contains('open');
+    picker.classList.toggle('open', !isOpen);
+    if (!isOpen) renderSymbols(currentCat);
+  };
+
+  document.getElementById('spGrid').addEventListener('click', (e) => {
+    const sym = e.target.closest('.sp-sym');
+    if (!sym) return;
+    const ta = document.getElementById('editorTextarea');
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    S.undoStack.push({ value: ta.value, start, end });
+    ta.value = ta.value.substring(0, start) + sym.dataset.sym + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + sym.dataset.sym.length;
+    ta.focus();
+    onEditorChange();
+  });
+
+  document.querySelectorAll('.sp-tab').forEach(tab => {
+    tab.onclick = (e) => { e.stopPropagation(); renderSymbols(tab.dataset.cat); };
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#btnSymbolPicker') && !e.target.closest('#symbolPicker')) {
+      document.getElementById('symbolPicker').classList.remove('open');
+    }
+  });
+
   document.getElementById('btnUndo').onclick = () => {
     if (!S.undoStack.length) return;
     const state = S.undoStack.pop();
@@ -2294,6 +2465,11 @@ function bindEvents() {
 async function init() {
   loadSettings();
   bindEvents();
+
+  // Init Mermaid
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+  }
 
   // Set default date
   document.getElementById('newNoteDate').value = todayISO();
