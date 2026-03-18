@@ -1441,12 +1441,19 @@ function askDeleteNote() {
   S.confirmCallback = async () => {
     showLoading('Eliminando…');
     try {
-      await GH.deleteFile(S.currentNote.path, S.currentNote.sha);
-      delete S.contentCache[S.currentNote.path];
+      const deletedPath = S.currentNote.path;
+      // Remove from local state immediately
+      for (const nb of S.notebooks) {
+        nb.notes = nb.notes.filter(n => n.path !== deletedPath);
+      }
+      S.notebooks = S.notebooks.filter(nb => nb.notes.length > 0);
+      delete S.contentCache[deletedPath];
+      await GH.deleteFile(deletedPath, S.currentNote.sha);
       S.currentNote = null;
       S.isDirty = false;
       document.getElementById('noteEditor').style.display = 'none';
       document.getElementById('emptyState').style.display = 'flex';
+      renderSidebar();
       await loadTree();
       toast('Nota eliminada', 'success');
     } catch(e) {
@@ -1579,22 +1586,32 @@ Instrucciones:
       msgContent = [{ type: 'text', text: `${prompt}\n\nContenido:\n\n${text}` }];
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': S.settings.anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: msgContent }]
-      })
-    });
+    let res, data;
+    try {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': S.settings.anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-5',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: msgContent }]
+        })
+      });
+    } catch(netErr) {
+      throw new Error(
+        'No se pudo conectar con la API de Anthropic. ' +
+        'Verifica: (1) que la API key esté correcta en ⚙ Configuración, ' +
+        '(2) que tengas conexión a internet, ' +
+        '(3) que no haya un bloqueador de anuncios activo que bloquee api.anthropic.com.'
+      );
+    }
 
-    const data = await res.json();
+    data = await res.json();
 
     if (!res.ok) {
       const errMsg = data?.error?.message || `Error HTTP ${res.status}`;
