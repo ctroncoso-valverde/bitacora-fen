@@ -1,0 +1,2506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/turndown/7.1.2/turndown.min.js"></script>
+<style>
+:root {
+  --sidebar-bg: #1c1917;
+  --sidebar-hover: #292524;
+  --sidebar-active: #3d2f1e;
+  --sidebar-text: #d6d3d1;
+  --sidebar-muted: #78716c;
+  --sidebar-border: #292524;
+  --main-bg: #fafaf9;
+  --editor-bg: #fffffe;
+  --accent: #b45309;
+  --accent-light: #fef3c7;
+  --accent-hover: #92400e;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #a8a29e;
+  --border: #e7e5e4;
+  --border-strong: #d6d3d1;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --success: #16a34a;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.12);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.18);
+  --radius: 6px;
+  --sidebar-w: 268px;
+  --font-ui: 'Outfit', sans-serif;
+  --font-editor: 'Lora', Georgia, serif;
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; overflow: hidden; font-family: var(--font-ui); }
+
+body { display: flex; background: var(--main-bg); color: var(--text-primary); }
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #0f0d0c;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon { font-size: 18px; }
+
+.logo-text {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  color: #fafaf9;
+  letter-spacing: .03em;
+}
+
+.sidebar-top-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  width: 30px; height: 30px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--sidebar-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: background .15s, color .15s;
+}
+.icon-btn:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
+
+.search-wrapper {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.search-wrapper input {
+  width: 100%;
+  padding: 7px 10px;
+  background: #292524;
+  border: 1px solid #3d3533;
+  border-radius: var(--radius);
+  color: var(--sidebar-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+  transition: border .15s;
+}
+.search-wrapper input::placeholder { color: var(--sidebar-muted); }
+.search-wrapper input:focus { border-color: var(--accent); }
+
+#notebookTree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+#notebookTree::-webkit-scrollbar { width: 4px; }
+#notebookTree::-webkit-scrollbar-track { background: transparent; }
+#notebookTree::-webkit-scrollbar-thumb { background: #3d3533; border-radius: 2px; }
+
+.nb-group { margin-bottom: 2px; }
+
+.nb-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--sidebar-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  user-select: none;
+  gap: 6px;
+  transition: color .15s;
+}
+.nb-header:hover { color: var(--sidebar-text); }
+
+.nb-header .nb-chevron {
+  font-size: 9px;
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.nb-header.open .nb-chevron { transform: rotate(90deg); }
+
+.nb-header .nb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.nb-header .nb-count {
+  background: #3d3533;
+  color: var(--sidebar-muted);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+}
+
+.nb-header .nb-menu-btn {
+  opacity: 0;
+  width: 18px; height: 18px;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  color: var(--sidebar-muted);
+  cursor: pointer;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .15s, background .15s;
+}
+.nb-header:hover .nb-menu-btn { opacity: 1; }
+.nb-header .nb-menu-btn:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
+
+.nb-notes { display: none; }
+.nb-notes.open { display: block; }
+
+.note-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px 6px 24px;
+  cursor: pointer;
+  border-radius: 0;
+  gap: 8px;
+  transition: background .12s;
+  position: relative;
+}
+.note-item:hover { background: var(--sidebar-hover); }
+.note-item.active { background: var(--sidebar-active); }
+.note-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.note-item-icon { font-size: 12px; color: var(--sidebar-muted); flex-shrink: 0; }
+
+.note-item-info { flex: 1; min-width: 0; }
+
+.note-item-title {
+  font-size: 13px;
+  color: var(--sidebar-text);
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.note-item.active .note-item-title { color: #fafaf9; font-weight: 500; }
+
+.note-item-date {
+  font-size: 11px;
+  color: var(--sidebar-muted);
+  margin-top: 1px;
+}
+
+.sidebar-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.btn-new-note {
+  width: 100%;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  transition: background .15s;
+}
+.btn-new-note:hover { background: var(--accent-hover); }
+
+/* ── MAIN ─────────────────────────────────────────────────── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--main-bg);
+}
+
+/* Empty state */
+#emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-muted);
+}
+
+.empty-icon { font-size: 48px; opacity: .4; }
+
+.empty-title {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.empty-sub { font-size: 14px; color: var(--text-muted); }
+
+/* Note editor */
+#noteEditor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--editor-bg);
+}
+
+#noteTitle {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+}
+#noteTitle::placeholder { color: var(--text-muted); }
+
+.editor-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.meta-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--main-bg);
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--editor-bg);
+}
+
+.tb-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.tb-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border-strong);
+  margin: 0 4px;
+}
+
+.tb-btn {
+  padding: 4px 7px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  line-height: 1;
+  transition: background .12s, color .12s;
+  min-width: 28px;
+  text-align: center;
+}
+.tb-btn:hover { background: var(--accent-light); color: var(--accent); }
+.tb-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1c1917;
+  color: #fff;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+}
+.tb-btn { position: relative; }
+
+.tb-select {
+  padding: 3px 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  outline: none;
+}
+
+/* Editor body */
+.editor-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Quill editor */
+#quillEditor {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--editor-bg);
+}
+
+#quillEditor::-webkit-scrollbar { width: 6px; }
+#quillEditor::-webkit-scrollbar-track { background: transparent; }
+#quillEditor::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* Override Quill styles */
+.ql-container {
+  font-family: var(--font-editor) !important;
+  font-size: 16px !important;
+  border: none !important;
+  height: 100%;
+}
+
+.ql-editor {
+  padding: 32px 64px !important;
+  line-height: 1.85 !important;
+  color: var(--text-primary) !important;
+  min-height: 100%;
+}
+
+.ql-editor h1 { font-family: var(--font-heading); font-size: 2em; font-weight: 600; margin: .2em 0 .5em; color: var(--text-primary); line-height: 1.2; }
+.ql-editor h2 { font-family: var(--font-heading); font-size: 1.55em; font-weight: 600; margin: 1.2em 0 .4em; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: .2em; }
+.ql-editor h3 { font-family: var(--font-heading); font-size: 1.2em; font-weight: 600; margin: 1em 0 .3em; color: var(--text-secondary); }
+.ql-editor p { margin: .4em 0; }
+.ql-editor ul, .ql-editor ol { padding-left: 1.8em; }
+.ql-editor blockquote { border-left: 3px solid var(--accent) !important; padding-left: 1em !important; margin: 1em 0 !important; color: var(--text-secondary) !important; font-style: italic; }
+.ql-editor pre.ql-syntax { background: #1c1917 !important; color: #d6d3d1 !important; border-radius: var(--radius) !important; padding: 1em 1.4em !important; font-family: var(--font-mono) !important; font-size: .88em !important; }
+.ql-editor table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+.ql-editor td, .ql-editor th { border: 1px solid var(--border); padding: 7px 12px; }
+.ql-editor th { background: var(--main-bg); font-weight: 600; }
+.ql-editor a { color: var(--accent); }
+.ql-editor hr { border: none; border-top: 1px solid var(--border); margin: 1.2em 0; }
+
+/* Hide Quill toolbar (we use our own) */
+.ql-toolbar { display: none !important; }
+.ql-snow .ql-editor { padding: 32px 64px !important; }
+.ql-container { z-index: 1 !important; }
+
+/* Editor footer */
+.editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--editor-bg);
+}
+
+#saveStatus {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-actions { display: flex; align-items: center; gap: 8px; }
+
+.btn {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all .15s;
+  background: var(--editor-bg);
+  color: var(--text-secondary);
+}
+.btn:hover { border-color: var(--border-strong); color: var(--text-primary); background: var(--main-bg); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.danger { color: var(--danger); border-color: #fca5a5; }
+.btn.danger:hover { background: #fef2f2; }
+.btn.sm { padding: 4px 10px; font-size: 12px; }
+
+/* ── MODALS ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+.modal-overlay * { pointer-events: auto; }
+
+.modal {
+  background: var(--editor-bg);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  width: 520px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp .2s ease;
+}
+
+.modal.wide { width: 680px; }
+.modal.narrow { width: 400px; }
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  width: 28px; height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s;
+}
+.modal-close:hover { background: var(--main-bg); color: var(--text-primary); }
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Form fields */
+.field { margin-bottom: 16px; }
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  background: var(--main-bg);
+  transition: border .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.field input::placeholder, .field textarea::placeholder { color: var(--text-muted); }
+.field textarea { resize: vertical; min-height: 80px; font-family: var(--font-editor); }
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+
+/* Notebook selector with create */
+.nb-select-wrapper { position: relative; }
+
+.nb-select-wrapper input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  outline: none;
+  background: var(--main-bg);
+  transition: border .15s;
+}
+.nb-select-wrapper input:focus { border-color: var(--accent); }
+
+.nb-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--editor-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+}
+.nb-dropdown.open { display: block; }
+
+.nb-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .1s;
+}
+.nb-dropdown-item:hover { background: var(--accent-light); }
+.nb-dropdown-item.create { color: var(--accent); font-weight: 500; }
+.nb-dropdown-item .nb-dropdown-count { color: var(--text-muted); font-size: 11px; margin-left: auto; }
+
+/* File upload area */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border .15s, background .15s;
+  background: var(--main-bg);
+}
+.upload-area:hover, .upload-area.drag { border-color: var(--accent); background: var(--accent-light); }
+
+.upload-icon { font-size: 32px; margin-bottom: 10px; }
+
+.upload-text { font-size: 14px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; }
+
+.upload-hint { font-size: 12px; color: var(--text-muted); }
+
+.upload-types { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+.file-selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--accent-light);
+  border-radius: var(--radius);
+  border: 1px solid #fcd34d;
+}
+.file-selected-icon { font-size: 20px; }
+.file-selected-name { font-size: 13px; font-weight: 500; color: var(--text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-selected-remove { background: transparent; border: none; cursor: pointer; color: var(--text-muted); font-size: 14px; padding: 2px; }
+.file-selected-remove:hover { color: var(--danger); }
+
+/* Process choice */
+.process-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.choice-card {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.choice-card:hover { border-color: var(--accent); background: var(--accent-light); }
+.choice-card.selected { border-color: var(--accent); background: var(--accent-light); }
+.choice-card.disabled { opacity: .45; cursor: not-allowed; }
+.choice-card.disabled:hover { border-color: var(--border); background: transparent; }
+
+.choice-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.choice-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.choice-desc { font-size: 12px; color: var(--text-muted); }
+
+/* Context menu */
+.ctx-menu {
+  position: fixed;
+  background: var(--editor-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  z-index: 500;
+  min-width: 160px;
+  display: none;
+}
+.ctx-menu.open { display: block; }
+.ctx-item {
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+  transition: background .1s;
+}
+.ctx-item:hover { background: var(--main-bg); }
+.ctx-item.danger { color: var(--danger); }
+.ctx-item.danger:hover { background: #fef2f2; }
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast notification */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1c1917;
+  color: #fafaf9;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  z-index: 2000;
+  transform: translateY(60px);
+  opacity: 0;
+  transition: transform .25s, opacity .25s;
+  max-width: 340px;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.success { background: var(--success); }
+#toast.error { background: var(--danger); }
+
+/* Loading overlay */
+#loadingOverlay {
+  position: fixed; inset: 0;
+  background: rgba(28,25,23,.7);
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  color: #fafaf9;
+  font-size: 15px;
+  backdrop-filter: blur(3px);
+}
+#loadingOverlay.open { display: flex; }
+#loadingOverlay .big-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255,255,255,.2);
+  border-top-color: #fafaf9;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+/* Symbol Picker */
+.symbol-picker {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--editor-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 200;
+  width: 280px;
+  padding: 8px;
+}
+.symbol-picker.open { display: block; }
+
+.sp-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.sp-tab {
+  padding: 3px 7px;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all .12s;
+}
+.sp-tab:hover { border-color: var(--accent); color: var(--accent); }
+.sp-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.sp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.sp-sym {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: all .1s;
+  user-select: none;
+}
+.sp-sym:hover { background: var(--accent-light); border-color: var(--accent); }
+
+
+/* History list */
+.history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background .12s;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: var(--main-bg); }
+.history-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.history-dot.current { background: var(--success); }
+.history-info { flex: 1; min-width: 0; }
+.history-msg { font-size: 13px; color: var(--text-primary); font-weight: 500; margin-bottom: 2px; }
+.history-date { font-size: 11px; color: var(--text-muted); }
+.history-sha { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.history-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+.history-loading { padding: 32px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  #sidebar { width: 220px; min-width: 220px; }
+  #editorTextarea, #previewPane { padding: 20px 24px; }
+}
+
+@media print {
+  #sidebar, .toolbar, .editor-footer { display: none !important; }
+  #previewPane { display: block !important; border: none; padding: 0; }
+  #editorTextarea { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ───────────────────────────────────────────── -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <span class="logo-icon">⚓</span>
+      <span class="logo-text">Bitácora</span>
+    </div>
+    <div class="sidebar-top-actions">
+      <button class="icon-btn" id="btnSync" title="Sincronizar">↻</button>
+      <button class="icon-btn" id="btnSettings" title="Configuración">⚙</button>
+    </div>
+  </div>
+
+  <div class="search-wrapper">
+    <input type="text" id="searchInput" placeholder="Buscar notas…" autocomplete="off">
+  </div>
+
+  <div id="notebookTree"></div>
+
+  <div class="sidebar-footer">
+    <button class="btn-new-note" id="btnNewNote">+ Nueva nota</button>
+  </div>
+</aside>
+
+<!-- ── MAIN ──────────────────────────────────────────────── -->
+<main id="main">
+  <div id="emptyState">
+    <div class="empty-icon">⚓</div>
+    <div class="empty-title">Bitácora</div>
+    <div class="empty-sub">Selecciona una nota o crea una nueva</div>
+  </div>
+
+  <div id="noteEditor" style="display:none">
+    <div class="editor-topbar">
+      <input type="text" id="noteTitle" placeholder="Título de la nota…">
+      <div class="editor-meta">
+        <span class="meta-tag" id="metaNotebook">📁 —</span>
+        <span class="meta-tag" id="metaDate">📅 —</span>
+
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="tb-group">
+        <select class="tb-select" id="tbHeading" title="Encabezado">
+          <option value="">Párrafo</option>
+          <option value="1">H1</option>
+          <option value="2">H2</option>
+          <option value="3">H3</option>
+        </select>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" data-fmt="bold" title="Negrita"><b>B</b></button>
+        <button class="tb-btn" data-fmt="italic" title="Cursiva"><i>I</i></button>
+        <button class="tb-btn" data-fmt="underline" title="Subrayado"><u>U</u></button>
+        <button class="tb-btn" data-fmt="strike" title="Tachado"><s>S</s></button>
+        <button class="tb-btn" data-fmt="background" data-val="#fef08a" title="Resaltado">▐H</button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" data-fmt="list" data-val="bullet" title="Lista con viñetas">• Lista</button>
+        <button class="tb-btn" data-fmt="list" data-val="ordered" title="Lista numerada">1. Lista</button>
+        <button class="tb-btn" data-fmt="blockquote" title="Cita">" Cita</button>
+        <button class="tb-btn" data-fmt="code-block" title="Código">{ }</button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" id="btnInsertTable" title="Insertar tabla">⊞ Tabla</button>
+        <button class="tb-btn" id="btnInsertLink" title="Enlace">🔗 Link</button>
+        <button class="tb-btn" id="btnInsertHr" title="Línea horizontal">—</button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group" style="position:relative">
+        <button class="tb-btn" id="btnSymbolPicker" title="Símbolos y emojis">① ★</button>
+        <div id="symbolPicker" class="symbol-picker">
+          <div class="sp-tabs">
+            <button class="sp-tab active" data-cat="num">① Núm.</button>
+            <button class="sp-tab" data-cat="status">● Estado</button>
+            <button class="sp-tab" data-cat="office">📌 Oficina</button>
+            <button class="sp-tab" data-cat="arrows">→ Flechas</button>
+            <button class="sp-tab" data-cat="geo">◆ Geo</button>
+          </div>
+          <div class="sp-grid" id="spGrid"></div>
+        </div>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" id="btnUndo" title="Deshacer">↩</button>
+        <button class="tb-btn" id="btnRedo" title="Rehacer">↪</button>
+      </div>
+    </div>
+
+    <div class="editor-body">
+      <div id="quillEditor"></div>
+    </div>
+
+    <div class="editor-footer">
+      <span id="saveStatus">Sin cambios</span>
+      <div class="footer-actions">
+        <button class="btn sm" id="btnExportMd">⬇ .md</button>
+        <button class="btn sm" id="btnExportPdf">⬇ PDF</button>
+        <button class="btn sm" id="btnHistory">🕐 Historial</button>
+        <button class="btn sm danger" id="btnDeleteNote">Eliminar</button>
+        <button class="btn primary" id="btnSave">Guardar en GitHub</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ── MODAL: SETTINGS ───────────────────────────────────── -->
+<div class="modal-overlay" id="modalSettings">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Configuración de Bitácora</span>
+      <button class="modal-close" data-close="modalSettings">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="cfgGithubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        <div class="field-hint">Necesita permiso <code>repo</code>. Créalo en GitHub → Settings → Developer settings → Tokens.</div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Usuario u organización GitHub</label>
+          <input type="text" id="cfgGithubOwner" placeholder="tu-usuario">
+        </div>
+        <div class="field">
+          <label>Nombre del repositorio</label>
+          <input type="text" id="cfgGithubRepo" placeholder="bitacora-fen">
+          <div class="field-hint">Créalo en GitHub previamente (puede ser privado).</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>API Key de Anthropic</label>
+        <input type="password" id="cfgAnthropicKey" placeholder="sk-ant-xxxxxxxxxxxx">
+        <div class="field-hint">Usada para procesar fotos y archivos con Claude.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="modalSettings">Cancelar</button>
+      <button class="btn" id="btnTestApi">🔌 Probar conexión</button>
+      <button class="btn primary" id="btnSaveSettings">Guardar configuración</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: NUEVA NOTA ─────────────────────────────────── -->
+<div class="modal-overlay" id="modalNewNote">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title">Nueva nota</span>
+      <button class="modal-close" data-close="modalNewNote">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step 1: basic info -->
+      <div id="newNoteStep1">
+        <div class="field">
+          <label>Título de la nota</label>
+          <input type="text" id="newNoteTitle" placeholder="Ej: Reunión con consultora AACSB">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Fecha</label>
+            <input type="date" id="newNoteDate">
+          </div>
+          <div class="field">
+            <label>Notebook</label>
+            <div class="nb-select-wrapper">
+              <input type="text" id="newNoteNotebook" placeholder="Elige o escribe uno nuevo…" autocomplete="off">
+              <div class="nb-dropdown" id="nbDropdown"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Adjuntar archivo (opcional)</label>
+          <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📎</div>
+            <div class="upload-text">Arrastra aquí o haz clic para seleccionar</div>
+            <div class="upload-hint">Foto, PDF, Word o Markdown</div>
+            <div class="upload-types">.jpg .jpeg .png .heic .webp · .pdf · .docx · .md · .txt</div>
+          </div>
+          <div class="file-selected" id="fileSelected" style="display:none">
+            <span class="file-selected-icon" id="fileIcon">📄</span>
+            <span class="file-selected-name" id="fileName"></span>
+            <button class="file-selected-remove" id="btnRemoveFile">✕</button>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept=".jpg,.jpeg,.png,.heic,.webp,.pdf,.docx,.md,.txt">
+        </div>
+
+        <!-- Process choice (shown when file selected) -->
+        <div id="processChoice" style="display:none">
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:block">¿Qué hago con el archivo?</label>
+          <div class="process-choice">
+            <div class="choice-card selected" data-choice="claude" id="choiceClaude">
+              <div class="choice-icon">🤖</div>
+              <div>
+                <div class="choice-title">Procesar con Claude</div>
+                <div class="choice-desc">Claude transcribe, organiza y genera una nota bien estructurada</div>
+              </div>
+            </div>
+            <div class="choice-card" data-choice="raw" id="choiceRaw">
+              <div class="choice-icon">📋</div>
+              <div>
+                <div class="choice-title">Importar tal cual</div>
+                <div class="choice-desc">Ingresa el contenido sin modificaciones (solo para .md y .txt)</div>
+              </div>
+            </div>
+          </div>
+          <div class="field" id="claudeContextField" style="margin-top:12px">
+            <label>Contexto adicional para Claude (opcional)</label>
+            <textarea id="claudeContext" placeholder="Ej: 'Esta fue una reunión con la mentora AACSB. Priorizar identificar acuerdos y próximos pasos.'" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="modalNewNote">Cancelar</button>
+      <button class="btn primary" id="btnCreateNote">Crear nota</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: RENAME NOTEBOOK ────────────────────────────── -->
+<div class="modal-overlay" id="modalRenameNb">
+  <div class="modal narrow">
+    <div class="modal-header">
+      <span class="modal-title">Renombrar notebook</span>
+      <button class="modal-close" data-close="modalRenameNb">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nuevo nombre</label>
+        <input type="text" id="renameNbInput" placeholder="Nombre del notebook">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="modalRenameNb">Cancelar</button>
+      <button class="btn primary" id="btnConfirmRename">Renombrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: CONFIRM DELETE ─────────────────────────────── -->
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal narrow">
+    <div class="modal-header">
+      <span class="modal-title" id="confirmTitle">Confirmar</span>
+      <button class="modal-close" data-close="modalConfirm">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMsg" style="font-size:14px;color:var(--text-secondary);line-height:1.6"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="modalConfirm">Cancelar</button>
+      <button class="btn danger" id="btnConfirmAction">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: HISTORIAL ──────────────────────────────────── -->
+<div class="modal-overlay" id="modalHistory">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title">🕐 Historial de versiones</span>
+      <button class="modal-close" data-close="modalHistory">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div id="historyList" style="min-height:120px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="modalHistory">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" id="ctxRename">✏️ Renombrar notebook</div>
+  <div class="ctx-item danger" id="ctxDelete">🗑 Eliminar notebook</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div class="big-spinner"></div>
+  <span id="loadingMsg">Cargando…</span>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+const S = {
+  settings: {
+    githubToken: '',
+    githubOwner: '',
+    githubRepo: '',
+    anthropicKey: ''
+  },
+  notebooks: [],      // [{name, notes:[{path, title, date, sha}]}]
+  currentNote: null,  // {path, title, date, notebook, content, sha}
+  contentCache: {},   // path → content string
+  isDirty: false,
+  currentView: 'edit',
+  searchQuery: '',
+  selectedFile: null,
+  processChoice: 'claude',
+  ctxNotebook: null,
+  renameTarget: null,
+  confirmCallback: null,
+  undoStack: [],
+  redoStack: []
+};
+
+// ══════════════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════════════
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem('bitacora_settings');
+    if (saved) S.settings = { ...S.settings, ...JSON.parse(saved) };
+  } catch(e) {}
+}
+
+function saveSettings() {
+  localStorage.setItem('bitacora_settings', JSON.stringify(S.settings));
+}
+
+function isConfigured() {
+  return S.settings.githubToken && S.settings.githubOwner && S.settings.githubRepo;
+}
+
+// ══════════════════════════════════════════════════════════
+//  GITHUB API
+// ══════════════════════════════════════════════════════════
+const GH = {
+  headers() {
+    return {
+      'Authorization': `token ${S.settings.githubToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    };
+  },
+
+  base() {
+    return `https://api.github.com/repos/${S.settings.githubOwner}/${S.settings.githubRepo}`;
+  },
+
+  async getTree() {
+    const res = await fetch(`${this.base()}/git/trees/HEAD?recursive=1`, { headers: this.headers() });
+    if (res.status === 404) return { tree: [] };
+    if (!res.ok) throw new Error(`GitHub error: ${res.status}`);
+    return res.json();
+  },
+
+  async getFile(path) {
+    const res = await fetch(`${this.base()}/contents/${encodeURIPath(path)}`, { headers: this.headers() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const content = decodeBase64(data.content);
+    return { content, sha: data.sha };
+  },
+
+  async writeFile(path, content, sha, message) {
+    // If no SHA provided, check if file already exists to get its SHA
+    if (!sha) {
+      const existing = await this.getFile(path);
+      if (existing) sha = existing.sha;
+    }
+    const body = {
+      message: message || (sha ? `Update: ${path}` : `Add: ${path}`),
+      content: encodeBase64(content),
+      ...(sha ? { sha } : {})
+    };
+    const res = await fetch(`${this.base()}/contents/${encodeURIPath(path)}`, {
+      method: 'PUT',
+      headers: this.headers(),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'GitHub write error');
+    }
+    return res.json();
+  },
+
+  async getFileHistory(path) {
+    const res = await fetch(
+      `${this.base()}/commits?path=${encodeURIPath(path)}&per_page=20`,
+      { headers: this.headers() }
+    );
+    if (!res.ok) throw new Error(`GitHub error: ${res.status}`);
+    return res.json();
+  },
+
+  async getFileAtCommit(path, commitSha) {
+    const res = await fetch(
+      `${this.base()}/contents/${encodeURIPath(path)}?ref=${commitSha}`,
+      { headers: this.headers() }
+    );
+    if (!res.ok) throw new Error('No se pudo cargar esa versión');
+    const data = await res.json();
+    return decodeBase64(data.content);
+  },
+
+  async deleteFile(path, sha, message) {
+    const res = await fetch(`${this.base()}/contents/${encodeURIPath(path)}`, {
+      method: 'DELETE',
+      headers: this.headers(),
+      body: JSON.stringify({ message: message || `Delete: ${path}`, sha })
+    });
+    if (!res.ok) throw new Error('GitHub delete error');
+    return res.json();
+  }
+};
+
+function encodeURIPath(p) {
+  return p.split('/').map(encodeURIComponent).join('/');
+}
+
+function encodeBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function decodeBase64(b64) {
+  return decodeURIComponent(escape(atob(b64.replace(/\n/g, ''))));
+}
+
+// ══════════════════════════════════════════════════════════
+//  LOAD NOTEBOOKS
+// ══════════════════════════════════════════════════════════
+async function loadTree() {
+  showLoading('Cargando notas desde GitHub…');
+  try {
+    const tree = await GH.getTree();
+    const mdFiles = (tree.tree || []).filter(f =>
+      f.type === 'blob' && f.path.startsWith('notebooks/') && f.path.endsWith('.md')
+    );
+
+    const nbMap = {};
+    for (const f of mdFiles) {
+      const parts = f.path.split('/');
+      if (parts.length < 3) continue;
+      const nb = parts[1];
+      const filename = parts.slice(2).join('/');
+      const { title, date } = parseFilename(filename);
+      if (!nbMap[nb]) nbMap[nb] = [];
+      nbMap[nb].push({ path: f.path, title, date, sha: f.sha, filename });
+    }
+
+    S.notebooks = Object.keys(nbMap).sort().map(name => ({
+      name,
+      notes: nbMap[name].sort((a, b) => b.date.localeCompare(a.date))
+    }));
+
+    renderSidebar();
+  } catch(e) {
+    toast(`Error cargando notas: ${e.message}`, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function parseFilename(filename) {
+  // Expected: "YYYY-MM-DD — Title.md" or "YYYY-MM-DD - Title.md"
+  const base = filename.replace(/\.md$/, '');
+  const match = base.match(/^(\d{4}-\d{2}-\d{2})\s*[—\-–]\s*(.+)$/);
+  if (match) return { date: match[1], title: match[2].trim() };
+  return { date: '', title: base };
+}
+
+function sanitizeFilename(str) {
+  return str.replace(/[/\\:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim().substring(0, 80);
+}
+
+// ══════════════════════════════════════════════════════════
+//  RENDER SIDEBAR
+// ══════════════════════════════════════════════════════════
+function renderSidebar() {
+  const tree = document.getElementById('notebookTree');
+  const q = S.searchQuery.toLowerCase();
+
+  let html = '';
+
+  for (const nb of S.notebooks) {
+    let notes = nb.notes;
+    if (q) notes = notes.filter(n => n.title.toLowerCase().includes(q) ||
+      (S.contentCache[n.path] || '').toLowerCase().includes(q));
+
+    if (q && notes.length === 0) continue;
+
+    const isOpen = !q ? (nb._open !== false) : true;
+    const activeNote = S.currentNote;
+
+    html += `<div class="nb-group" data-nb="${esc(nb.name)}">
+      <div class="nb-header ${isOpen ? 'open' : ''}" data-nb="${esc(nb.name)}">
+        <span class="nb-chevron">▶</span>
+        <span class="nb-name">📁 ${esc(nb.name)}</span>
+        <span class="nb-count">${notes.length}</span>
+        <button class="nb-menu-btn" data-nb="${esc(nb.name)}" title="Opciones">⋯</button>
+      </div>
+      <div class="nb-notes ${isOpen ? 'open' : ''}">`;
+
+    for (const note of notes) {
+      const isActive = activeNote && activeNote.path === note.path;
+      const dateLabel = note.date ? formatDate(note.date) : '';
+      html += `<div class="note-item ${isActive ? 'active' : ''}" data-path="${esc(note.path)}">
+        <span class="note-item-icon">📝</span>
+        <div class="note-item-info">
+          <div class="note-item-title">${esc(note.title)}</div>
+          <div class="note-item-date">${esc(dateLabel)}</div>
+        </div>
+      </div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  if (!html) {
+    html = `<div style="padding:24px 16px;text-align:center;color:var(--sidebar-muted);font-size:13px">
+      ${q ? 'Sin resultados' : 'No hay notas aún.<br>¡Crea la primera!'}
+    </div>`;
+  }
+
+  tree.innerHTML = html;
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  try {
+    const [y, m, day] = d.split('-');
+    const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+  } catch { return d; }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════════════
+//  OPEN / LOAD NOTE
+// ══════════════════════════════════════════════════════════
+async function openNote(path) {
+  if (S.isDirty) {
+    if (!confirm('Tienes cambios sin guardar. ¿Salir de todas formas?')) return;
+  }
+
+  showLoading('Cargando nota…');
+  try {
+    // Always fetch from GitHub to get correct content SHA
+    const file = await GH.getFile(path);
+    if (!file) throw new Error('No se pudo cargar la nota');
+    const { content, sha } = file;
+    S.contentCache[path] = content;
+
+    // Update SHA in notebooks tree
+    for (const nb of S.notebooks) {
+      const note = nb.notes.find(n => n.path === path);
+      if (note) { note.sha = sha; break; }
+    }
+
+    const parts = path.split('/');
+    const nb = parts[1];
+    const fn = parts.slice(2).join('/');
+    const { title, date } = parseFilename(fn);
+
+    S.currentNote = { path, title, date, notebook: nb, content, sha };
+    S.isDirty = false;
+
+    showEditor();
+    document.getElementById('noteTitle').value = title;
+    document.getElementById('metaNotebook').textContent = `📁 ${nb}`;
+    document.getElementById('metaDate').textContent = date ? `📅 ${formatDate(date)}` : '📅 —';
+    setEditorContent(content);
+    updateSaveStatus();
+    renderSidebar();
+  } catch(e) {
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function showEditor() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('noteEditor').style.display = 'flex';
+  if (!quill) initQuill();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SAVE NOTE
+// ══════════════════════════════════════════════════════════
+async function saveCurrentNote() {
+  if (!S.currentNote) return;
+  const title = document.getElementById('noteTitle').value.trim() || 'Sin título';
+  const content = getEditorContent();
+
+  const safeName = sanitizeFilename(title);
+  const date = S.currentNote.date || todayISO();
+  const filename = `${date} — ${safeName}.md`;
+  const newPath = `notebooks/${S.currentNote.notebook}/${filename}`;
+
+  showLoading('Guardando en GitHub…');
+  try {
+    // If path changed (title/date changed), delete old and create new
+    let sha = S.currentNote.sha;
+    if (newPath !== S.currentNote.path && S.currentNote.sha) {
+      await GH.deleteFile(S.currentNote.path, S.currentNote.sha, `Rename → ${filename}`);
+      sha = null;
+    }
+
+    const res = await GH.writeFile(newPath, content, sha);
+    const newSha = res.content?.sha;
+
+    // Update cache
+    delete S.contentCache[S.currentNote.path];
+    S.contentCache[newPath] = content;
+    S.currentNote = { ...S.currentNote, path: newPath, title, sha: newSha, content };
+    S.isDirty = false;
+
+    await loadTree();
+    renderSidebar();
+    updateSaveStatus();
+    toast('Nota guardada ✓', 'success');
+  } catch(e) {
+    toast(`Error guardando: ${e.message}`, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  DELETE NOTE
+// ══════════════════════════════════════════════════════════
+function askDeleteNote() {
+  if (!S.currentNote) return;
+  document.getElementById('confirmTitle').textContent = 'Eliminar nota';
+  document.getElementById('confirmMsg').innerHTML =
+    `¿Eliminar permanentemente <strong>"${esc(S.currentNote.title)}"</strong>? Esta acción no se puede deshacer.`;
+  S.confirmCallback = async () => {
+    showLoading('Eliminando…');
+    try {
+      const deletedPath = S.currentNote.path;
+      // Remove from local state immediately
+      for (const nb of S.notebooks) {
+        nb.notes = nb.notes.filter(n => n.path !== deletedPath);
+      }
+      S.notebooks = S.notebooks.filter(nb => nb.notes.length > 0);
+      delete S.contentCache[deletedPath];
+      await GH.deleteFile(deletedPath, S.currentNote.sha);
+      S.currentNote = null;
+      S.isDirty = false;
+      document.getElementById('noteEditor').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'flex';
+      renderSidebar();
+      await loadTree();
+      toast('Nota eliminada', 'success');
+    } catch(e) {
+      toast(`Error: ${e.message}`, 'error');
+    } finally {
+      hideLoading();
+    }
+    closeModal('modalConfirm');
+  };
+  openModal('modalConfirm');
+}
+
+// ══════════════════════════════════════════════════════════
+//  CREATE NOTE
+// ══════════════════════════════════════════════════════════
+async function handleCreateNote() {
+  const title = document.getElementById('newNoteTitle').value.trim();
+  const date = document.getElementById('newNoteDate').value || todayISO();
+  const nb = document.getElementById('newNoteNotebook').value.trim();
+
+  if (!title) { toast('Ingresa un título para la nota', 'error'); return; }
+  if (!nb) { toast('Selecciona o crea un notebook', 'error'); return; }
+
+  closeModal('modalNewNote');
+
+  let content = '';
+
+  if (S.selectedFile) {
+    if (S.processChoice === 'claude') {
+      try {
+        content = await processFileWithClaude(
+          S.selectedFile,
+          document.getElementById('claudeContext').value.trim(),
+          title
+        );
+      } catch(e) {
+        return; // Claude failed — don't create empty note
+      }
+    } else {
+      content = await readFileAsText(S.selectedFile);
+    }
+  } else {
+    content = `# ${title}\n\n`;
+  }
+
+  const safeName = sanitizeFilename(title);
+  const filename = `${date} — ${safeName}.md`;
+  const path = `notebooks/${nb}/${filename}`;
+
+  showLoading('Guardando nota nueva…');
+  try {
+    const res = await GH.writeFile(path, content, null);
+    const sha = res.content?.sha;
+    S.contentCache[path] = content;
+    S.currentNote = { path, title, date, notebook: nb, content, sha };
+    S.isDirty = false;
+
+    // Add to local state
+    let nbObj = S.notebooks.find(n => n.name === nb);
+    if (!nbObj) {
+      nbObj = { name: nb, notes: [], _open: true };
+      S.notebooks.push(nbObj);
+      S.notebooks.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    const { title: t, date: d } = parseFilename(filename);
+    nbObj.notes.unshift({ path, title: t, date: d, sha, filename });
+
+    showEditor();
+    document.getElementById('noteTitle').value = title;
+    document.getElementById('metaNotebook').textContent = `📁 ${nb}`;
+    document.getElementById('metaDate').textContent = `📅 ${formatDate(date)}`;
+    setEditorContent(content);
+    updateSaveStatus();
+    renderSidebar();
+    toast('Nota creada ✓', 'success');
+  } catch(e) {
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  CLAUDE API — FILE PROCESSING
+// ══════════════════════════════════════════════════════════
+async function processFileWithClaude(file, context, title) {
+  showLoading('Claude está procesando el archivo…');
+  try {
+    if (!S.settings.anthropicKey) throw new Error('API key de Anthropic no configurada. Ve a ⚙ Configuración.');
+
+    const base64 = await fileToBase64(file);
+    const mime = file.type || '';
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isImage = mime.startsWith('image/') || ['jpg','jpeg','png','webp','heic'].includes(ext);
+    const isPDF = mime === 'application/pdf' || ext === 'pdf';
+    const isDocx = ext === 'docx';
+
+    let msgContent = [];
+    const prompt = `Eres un asistente que transforma apuntes y notas en documentos Markdown bien organizados.
+Tarea: Transcribe y organiza el contenido adjunto como una nota de reunión en formato Markdown.
+${context ? `Contexto adicional del usuario: ${context}` : ''}
+${title ? `Título sugerido: ${title}` : ''}
+Instrucciones:
+- Usa la estructura que mejor represente el contenido — no impongas un template rígido
+- Usa encabezados Markdown (##, ###) para organizar secciones naturales
+- Si hay tareas o acuerdos, resáltalos con viñetas o checkboxes [ ]
+- Si hay fechas o personas mencionadas, mantenlas
+- Si hay diagramas, flujos o esquemas, represéntalos como bloques Mermaid (bloque de código con lenguaje mermaid)
+- Si hay fórmulas matemáticas, usa notación LaTeX entre $$ ... $$
+- Usa emojis de oficina (① ② ③ ✅ ⚠️ 📌 🎯 etc.) donde aporten claridad visual
+- Produce SOLO el contenido Markdown, sin explicaciones adicionales ni bloques de código envolventes`;
+
+    if (isImage) {
+      const ext2 = file.name.split('.').pop().toLowerCase();
+      const imgMime = mime || (ext2 === 'png' ? 'image/png' : ext2 === 'webp' ? 'image/webp' : 'image/jpeg');
+      msgContent = [
+        { type: 'image', source: { type: 'base64', media_type: imgMime, data: base64 } },
+        { type: 'text', text: prompt }
+      ];
+    } else if (isPDF) {
+      msgContent = [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+        { type: 'text', text: prompt }
+      ];
+    } else if (isDocx) {
+      // Convert docx to text first via mammoth, then send as text
+      const text = await extractDocxText(file);
+      msgContent = [{ type: 'text', text: `${prompt}\n\nContenido del documento:\n\n${text}` }];
+    } else {
+      // Text/markdown — decode and send as text
+      const text = new TextDecoder().decode(Uint8Array.from(atob(base64), c => c.charCodeAt(0)));
+      msgContent = [{ type: 'text', text: `${prompt}\n\nContenido:\n\n${text}` }];
+    }
+
+    let res, data;
+    try {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': S.settings.anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-5',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: msgContent }]
+        })
+      });
+    } catch(netErr) {
+      throw new Error(
+        'No se pudo conectar con la API de Anthropic. ' +
+        'Verifica: (1) que la API key esté correcta en ⚙ Configuración, ' +
+        '(2) que tengas conexión a internet, ' +
+        '(3) que no haya un bloqueador de anuncios activo que bloquee api.anthropic.com.'
+      );
+    }
+
+    data = await res.json();
+
+    if (!res.ok) {
+      const errMsg = data?.error?.message || `Error HTTP ${res.status}`;
+      throw new Error(errMsg);
+    }
+
+    const result = data.content?.[0]?.text;
+    if (!result) throw new Error('Claude no devolvió contenido. Intenta de nuevo.');
+    return result;
+  } catch(e) {
+    toast(`❌ ${e.message}`, 'error');
+    throw e;
+  } finally {
+    hideLoading();
+  }
+}
+
+async function extractDocxText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+        resolve(result.value);
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+async function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsText(file, 'utf-8');
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  EDITOR & TOOLBAR
+// ══════════════════════════════════════════════════════════
+// ── QUILL INSTANCE ───────────────────────────────────────
+let quill = null;
+
+function initQuill() {
+  quill = new Quill('#quillEditor', {
+    theme: 'snow',
+    placeholder: 'Comienza a escribir…',
+    modules: {
+      toolbar: false,
+      history: { delay: 500, maxStack: 200, userOnly: true }
+    }
+  });
+  quill.on('text-change', () => {
+    S.isDirty = true;
+    updateSaveStatus();
+  });
+}
+
+function getEditorContent() {
+  if (!quill) return '';
+  const html = quill.root.innerHTML;
+  if (!html || html === '<p><br></p>') return '';
+  const td = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
+  return td.turndown(html);
+}
+
+function setEditorContent(mdContent) {
+  if (!quill) return;
+  if (!mdContent || !mdContent.trim()) { quill.setText(''); return; }
+  const html = marked.parse(mdContent);
+  quill.clipboard.dangerouslyPasteHTML(html);
+}
+
+function applyQuillFormat(fmt, val) {
+  if (!quill) return;
+  if (fmt === 'header') {
+    quill.format('header', val ? parseInt(val) : false);
+  } else {
+    const range = quill.getSelection(true);
+    const current = quill.getFormat(range || undefined);
+    const newVal = val !== undefined ? val : !current[fmt];
+    quill.format(fmt, newVal);
+  }
+  quill.focus();
+}
+
+function onEditorChange() {
+  S.isDirty = true;
+  updateSaveStatus();
+}
+
+function updateSaveStatus() {
+  const el = document.getElementById('saveStatus');
+  if (S.isDirty) {
+    el.innerHTML = '<span style="color:var(--accent)">● Sin guardar</span>';
+  } else {
+    el.innerHTML = '<span style="color:var(--success)">✓ Guardado</span>';
+  }
+}
+
+function setView(view) {
+  S.currentView = view;
+}
+
+// ══════════════════════════════════════════════════════════
+//  NOTEBOOK MANAGEMENT
+// ══════════════════════════════════════════════════════════
+function openContextMenu(e, nbName) {
+  e.stopPropagation();
+  S.ctxNotebook = nbName;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('open');
+}
+
+function openRenameNb() {
+  document.getElementById('renameNbInput').value = S.ctxNotebook;
+  S.renameTarget = S.ctxNotebook;
+  openModal('modalRenameNb');
+}
+
+async function confirmRenameNb() {
+  const newName = document.getElementById('renameNbInput').value.trim();
+  if (!newName || newName === S.renameTarget) {
+    closeModal('modalRenameNb');
+    return;
+  }
+
+  const nb = S.notebooks.find(n => n.name === S.renameTarget);
+  if (!nb) return;
+
+  closeModal('modalRenameNb');
+  showLoading(`Renombrando notebook a "${newName}"…`);
+
+  try {
+    for (const note of nb.notes) {
+      const file = await GH.getFile(note.path);
+      if (!file) continue;
+      const newPath = note.path.replace(`notebooks/${S.renameTarget}/`, `notebooks/${newName}/`);
+      await GH.writeFile(newPath, file.content, null, `Move to ${newName}`);
+      await GH.deleteFile(note.path, file.sha, `Rename notebook`);
+      if (S.contentCache[note.path]) {
+        S.contentCache[newPath] = S.contentCache[note.path];
+        delete S.contentCache[note.path];
+      }
+      if (S.currentNote?.path === note.path) {
+        S.currentNote.path = newPath;
+        S.currentNote.notebook = newName;
+        document.getElementById('metaNotebook').textContent = `📁 ${newName}`;
+      }
+    }
+    await loadTree();
+    toast(`Notebook renombrado a "${newName}" ✓`, 'success');
+  } catch(e) {
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function askDeleteNotebook(nbName) {
+  const nb = S.notebooks.find(n => n.name === nbName);
+  if (!nb) return;
+  document.getElementById('confirmTitle').textContent = 'Eliminar notebook';
+  document.getElementById('confirmMsg').innerHTML =
+    `¿Eliminar el notebook <strong>"${esc(nbName)}"</strong> con <strong>${nb.notes.length} nota(s)</strong>? Esta acción no se puede deshacer.`;
+  S.confirmCallback = async () => {
+    closeModal('modalConfirm');
+    showLoading(`Eliminando notebook "${nbName}"…`);
+    try {
+      const nb2 = S.notebooks.find(n => n.name === nbName);
+      for (const note of nb2.notes) {
+        const file = await GH.getFile(note.path);
+        if (file) await GH.deleteFile(note.path, file.sha, `Delete notebook ${nbName}`);
+        delete S.contentCache[note.path];
+      }
+      if (S.currentNote?.notebook === nbName) {
+        S.currentNote = null;
+        document.getElementById('noteEditor').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'flex';
+      }
+      await loadTree();
+      toast(`Notebook "${nbName}" eliminado`, 'success');
+    } catch(e) {
+      toast(`Error: ${e.message}`, 'error');
+    } finally {
+      hideLoading();
+    }
+  };
+  openModal('modalConfirm');
+}
+
+// ══════════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════════
+async function showHistory() {
+  if (!S.currentNote) return;
+  const list = document.getElementById('historyList');
+  list.innerHTML = '<div class="history-loading"><div class="spinner"></div></div>';
+  openModal('modalHistory');
+
+  try {
+    const commits = await GH.getFileHistory(S.currentNote.path);
+    if (!commits.length) {
+      list.innerHTML = '<div class="history-loading">No hay versiones anteriores guardadas.</div>';
+      return;
+    }
+
+    list.innerHTML = commits.map((c, i) => {
+      const date = new Date(c.commit.author.date);
+      const dateStr = date.toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const isCurrent = i === 0;
+      const msg = c.commit.message.replace(/^(Update|Add): notebooks\/[^/]+\//, '').replace(/\.md$/, '') || c.commit.message;
+      return `<div class="history-item">
+        <div class="history-dot ${isCurrent ? 'current' : ''}"></div>
+        <div class="history-info">
+          <div class="history-msg">${isCurrent ? '● Versión actual — ' : ''}${esc(msg)}</div>
+          <div class="history-date">${dateStr} · ${esc(c.commit.author.name)}</div>
+          <div class="history-sha">${c.sha.substring(0, 8)}</div>
+        </div>
+        <div class="history-actions">
+          ${!isCurrent ? `<button class="btn sm" onclick="previewVersion('${c.sha}')">Ver</button>
+          <button class="btn sm primary" onclick="restoreVersion('${c.sha}')">Restaurar</button>` : '<span style="font-size:11px;color:var(--success)">Actual</span>'}
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    list.innerHTML = `<div class="history-loading" style="color:var(--danger)">Error: ${e.message}</div>`;
+  }
+}
+
+async function previewVersion(commitSha) {
+  if (!S.currentNote) return;
+  showLoading('Cargando versión…');
+  try {
+    const content = await GH.getFileAtCommit(S.currentNote.path, commitSha);
+    closeModal('modalHistory');
+    hideLoading();
+    // Open in new window
+    const win = window.open('', '_blank');
+    const { marked: mk } = window;
+    const html = typeof marked !== 'undefined' ? marked.parse(content) : '<pre>' + content + '</pre>';
+    win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Vista previa — ' + esc(S.currentNote.title) + '</title>'
+      + '<style>body{font-family:Georgia,serif;font-size:14px;line-height:1.7;max-width:700px;margin:40px auto;padding:0 24px;color:#1c1917}'
+      + 'h1,h2,h3{font-family:Georgia,serif}pre{background:#1c1917;color:#d6d3d1;padding:1em;border-radius:4px}'
+      + 'blockquote{border-left:3px solid #b45309;padding-left:1em;color:#57534e;font-style:italic}'
+      + '.banner{background:#fef3c7;border:1px solid #fcd34d;padding:10px 16px;border-radius:6px;margin-bottom:24px;font-size:13px}'
+      + '</style></head><body>'
+      + '<div class="banner">⚠️ Vista previa de versión anterior (commit ' + commitSha.substring(0, 8) + '). Esta versión NO ha sido restaurada.</div>'
+      + html + '</body></html>');
+    win.document.close();
+  } catch(e) {
+    hideLoading();
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function restoreVersion(commitSha) {
+  if (!S.currentNote) return;
+  if (!confirm('¿Restaurar esta versión? El contenido actual será reemplazado (quedará guardado en el historial de GitHub).')) return;
+  closeModal('modalHistory');
+  showLoading('Restaurando versión…');
+  try {
+    const oldContent = await GH.getFileAtCommit(S.currentNote.path, commitSha);
+    // Get current SHA
+    const current = await GH.getFile(S.currentNote.path);
+    const res = await GH.writeFile(S.currentNote.path, oldContent, current ? current.sha : null, 'Restore: version ' + commitSha.substring(0, 8));
+    const newSha = res.content?.sha;
+    S.currentNote.sha = newSha;
+    S.currentNote.content = oldContent;
+    S.contentCache[S.currentNote.path] = oldContent;
+    S.isDirty = false;
+    setEditorContent(oldContent);
+    updateSaveStatus();
+    toast('Versión restaurada ✓', 'success');
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════════════════
+function exportMd() {
+  if (!S.currentNote) return;
+  const content = getEditorContent();
+  const title = document.getElementById('noteTitle').value.trim() || 'nota';
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${sanitizeFilename(title)}.md`;
+  a.click();
+}
+
+function exportPdf() {
+  if (!S.currentNote) return;
+  const title = document.getElementById('noteTitle').value.trim() || 'Nota';
+  const html = quill ? quill.root.innerHTML : '';
+  const nb = S.currentNote.notebook || '';
+  const date = S.currentNote.date || '';
+  const win = window.open('', '_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">'
+    + '<style>'
+    + 'body{font-family:Lora,Georgia,serif;font-size:13pt;line-height:1.8;color:#1c1917;max-width:720px;margin:40px auto;padding:0 32px}'
+    + 'h1{font-family:"Cormorant Garamond",Georgia,serif;font-size:2em;font-weight:600;margin:.2em 0 .5em;border-bottom:1px solid #e7e5e4;padding-bottom:.2em}'
+    + 'h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.5em;font-weight:600;margin:1.2em 0 .4em;border-bottom:1px solid #e7e5e4}'
+    + 'h3{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.2em;font-weight:600;margin:1em 0 .3em;color:#57534e}'
+    + 'p{margin:.5em 0}ul,ol{padding-left:1.8em;margin:.5em 0}li{margin:.3em 0}'
+    + 'blockquote{border-left:3px solid #b45309;padding-left:1em;margin:1em 0;color:#57534e;font-style:italic}'
+    + 'pre{background:#1c1917;color:#d6d3d1;border-radius:6px;padding:1em 1.4em;font-size:.88em}'
+    + 'code{font-family:monospace;font-size:.88em;background:#f5f5f4;padding:.15em .4em;border-radius:3px}'
+    + 'table{border-collapse:collapse;width:100%;margin:1em 0}th{background:#fafaf9;font-weight:600;text-align:left;padding:8px 12px;border:1px solid #e7e5e4}'
+    + 'td{padding:7px 12px;border:1px solid #e7e5e4}a{color:#b45309}'
+    + '.cover{margin-bottom:2em;padding-bottom:1em;border-bottom:2px solid #1c1917}'
+    + '.cover h1{border:none;margin-bottom:.1em}.cover-meta{font-size:11pt;color:#78716c}'
+    + '@media print{body{margin:20px}}'
+    + '</style></head><body>'
+    + '<div class="cover"><h1>' + title + '</h1>'
+    + '<div class="cover-meta">' + nb + ' &middot; ' + date + '</div></div>'
+    + html
+    + '<scr' + 'ipt>window.onload=function(){window.print()}</scr' + 'ipt>'
+    + '</body></html>');
+  win.document.close();
+}
+
+// ══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  // Disable Quill interaction while modal is open
+  const qe = document.getElementById('quillEditor');
+  if (qe) qe.style.pointerEvents = 'none';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  // Re-enable Quill if no other modals are open
+  const anyOpen = document.querySelector('.modal-overlay.open');
+  if (!anyOpen) {
+    const qe = document.getElementById('quillEditor');
+    if (qe) qe.style.pointerEvents = '';
+  }
+}
+
+function showLoading(msg = 'Cargando…') {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingOverlay').classList.add('open');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('open');
+}
+
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type ? `show ${type}` : 'show';
+  setTimeout(() => el.className = '', 3000);
+}
+
+function todayISO() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Notebook dropdown for new note modal
+function renderNbDropdown(filter = '') {
+  const dd = document.getElementById('nbDropdown');
+  const nbs = S.notebooks.filter(n => !filter || n.name.toLowerCase().includes(filter.toLowerCase()));
+  let html = '';
+
+  if (filter && !S.notebooks.find(n => n.name.toLowerCase() === filter.toLowerCase())) {
+    html += `<div class="nb-dropdown-item create" data-nb="${esc(filter)}">
+      ✚ Crear notebook "<strong>${esc(filter)}</strong>"
+    </div>`;
+  }
+
+  for (const nb of nbs) {
+    html += `<div class="nb-dropdown-item" data-nb="${esc(nb.name)}">
+      📁 ${esc(nb.name)}
+      <span class="nb-dropdown-count">${nb.notes.length}</span>
+    </div>`;
+  }
+
+  if (!html) {
+    html = `<div class="nb-dropdown-item" style="color:var(--text-muted);cursor:default">
+      Escribe para crear uno nuevo
+    </div>`;
+  }
+
+  dd.innerHTML = html;
+  dd.classList.add('open');
+}
+
+function resetNewNoteModal() {
+  document.getElementById('newNoteTitle').value = '';
+  document.getElementById('newNoteDate').value = todayISO();
+  document.getElementById('newNoteNotebook').value = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileSelected').style.display = 'none';
+  document.getElementById('uploadArea').style.display = 'block';
+  document.getElementById('processChoice').style.display = 'none';
+  document.getElementById('claudeContext').value = '';
+  document.getElementById('nbDropdown').classList.remove('open');
+  S.selectedFile = null;
+  S.processChoice = 'claude';
+  document.querySelectorAll('.choice-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.choice === 'claude');
+  });
+}
+
+function setSelectedFile(file) {
+  if (!file) return;
+  S.selectedFile = file;
+
+  const icons = { 'image': '🖼️', 'application/pdf': '📄', 'docx': '📝', 'markdown': '📋', 'text': '📄' };
+  const ext = file.name.split('.').pop().toLowerCase();
+  const iconKey = file.type.startsWith('image') ? 'image' :
+    file.type === 'application/pdf' ? 'application/pdf' :
+    ext === 'docx' ? 'docx' : ext === 'md' ? 'markdown' : 'text';
+
+  document.getElementById('fileIcon').textContent = icons[iconKey] || '📄';
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSelected').style.display = 'flex';
+  document.getElementById('uploadArea').style.display = 'none';
+  document.getElementById('processChoice').style.display = 'block';
+
+  // Disable "import as-is" for images and PDFs
+  const isRawOk = ['md', 'txt'].includes(ext);
+  const rawCard = document.getElementById('choiceRaw');
+  rawCard.classList.toggle('disabled', !isRawOk);
+  if (!isRawOk) {
+    rawCard.querySelector('.choice-desc').textContent = 'No disponible para imágenes y PDFs';
+    if (S.processChoice === 'raw') {
+      S.processChoice = 'claude';
+      document.getElementById('choiceClaude').classList.add('selected');
+      rawCard.classList.remove('selected');
+    }
+  } else {
+    rawCard.querySelector('.choice-desc').textContent = 'Ingresa el contenido sin modificaciones (solo para .md y .txt)';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ══════════════════════════════════════════════════════════
+function bindEvents() {
+
+  // ── Sidebar ──
+  document.getElementById('btnNewNote').onclick = () => {
+    resetNewNoteModal();
+    openModal('modalNewNote');
+  };
+
+  document.getElementById('btnSettings').onclick = () => {
+    document.getElementById('cfgGithubToken').value = S.settings.githubToken;
+    document.getElementById('cfgGithubOwner').value = S.settings.githubOwner;
+    document.getElementById('cfgGithubRepo').value = S.settings.githubRepo;
+    document.getElementById('cfgAnthropicKey').value = S.settings.anthropicKey;
+    openModal('modalSettings');
+  };
+
+  document.getElementById('btnSync').onclick = () => {
+    if (!isConfigured()) { toast('Configura GitHub primero', 'error'); return; }
+    loadTree();
+  };
+
+  document.getElementById('searchInput').oninput = (e) => {
+    S.searchQuery = e.target.value;
+    renderSidebar();
+  };
+
+  // Notebook tree click delegation
+  document.getElementById('notebookTree').addEventListener('click', (e) => {
+    const noteItem = e.target.closest('.note-item');
+    if (noteItem) {
+      openNote(noteItem.dataset.path);
+      return;
+    }
+    const menuBtn = e.target.closest('.nb-menu-btn');
+    if (menuBtn) {
+      openContextMenu(e, menuBtn.dataset.nb);
+      return;
+    }
+    const nbHeader = e.target.closest('.nb-header');
+    if (nbHeader && !e.target.closest('.nb-menu-btn')) {
+      const nbName = nbHeader.dataset.nb;
+      const nb = S.notebooks.find(n => n.name === nbName);
+      if (nb) nb._open = !nbHeader.classList.contains('open');
+      renderSidebar();
+    }
+  });
+
+  // ── Context Menu ──
+  document.getElementById('ctxRename').onclick = () => {
+    document.getElementById('ctxMenu').classList.remove('open');
+    openRenameNb();
+  };
+
+  document.getElementById('ctxDelete').onclick = () => {
+    document.getElementById('ctxMenu').classList.remove('open');
+    askDeleteNotebook(S.ctxNotebook);
+  };
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ctx-menu') && !e.target.closest('.nb-menu-btn')) {
+      document.getElementById('ctxMenu').classList.remove('open');
+    }
+    if (!e.target.closest('.nb-select-wrapper')) {
+      document.getElementById('nbDropdown').classList.remove('open');
+    }
+  });
+
+  // ── Toolbar (Quill) ──
+  document.querySelectorAll('.tb-btn[data-fmt]').forEach(btn => {
+    btn.onclick = () => applyQuillFormat(btn.dataset.fmt, btn.dataset.val);
+  });
+
+  document.getElementById('tbHeading').onchange = (e) => {
+    applyQuillFormat('header', e.target.value || false);
+    e.target.value = '';
+  };
+
+  document.getElementById('btnInsertTable').onclick = () => {
+    if (!quill) return;
+    const range = quill.getSelection(true);
+    const html = '<table><thead><tr><th>Columna 1</th><th>Columna 2</th><th>Columna 3</th></tr></thead><tbody><tr><td>Celda 1</td><td>Celda 2</td><td>Celda 3</td></tr><tr><td>Celda 4</td><td>Celda 5</td><td>Celda 6</td></tr></tbody></table>';
+    quill.clipboard.dangerouslyPasteHTML(range ? range.index : 0, html);
+    quill.focus();
+  };
+
+  document.getElementById('btnInsertLink').onclick = () => {
+    const url = prompt('URL del enlace:');
+    if (!url || !quill) return;
+    const range = quill.getSelection(true);
+    if (range && range.length > 0) {
+      quill.format('link', url);
+    } else {
+      quill.insertText(range ? range.index : 0, url, 'link', url);
+    }
+    quill.focus();
+  };
+
+  document.getElementById('btnInsertHr').onclick = () => {
+    if (!quill) return;
+    const range = quill.getSelection(true) || { index: quill.getLength() };
+    quill.insertText(range.index, '\n');
+    quill.focus();
+  };
+
+  // Symbol picker
+  const SYMBOLS = {
+    num:    ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','❶','❷','❸','❹','❺','❻','❼','❽','❾','❿'],
+    status: ['✅','❌','⚠️','🔴','🟡','🟢','🔵','⭕','🔲','🔳','💬','📢','🚨','🔔','⛔','✔️','✖️','❓','❗','💯'],
+    office: ['📌','📎','🗂️','📋','📊','📈','📉','💡','🎯','🔑','⚡','🗝️','📝','🖊️','🗒️','📅','🕐','👤','👥','🤝'],
+    arrows: ['→','←','↑','↓','↔','↕','⇒','⇐','⇔','⟶','⟵','⟷','↗','↘','↙','↖','➡','⬅','⬆','⬇','▶','◀','▲','▼'],
+    geo:    ['◆','◇','■','□','▪','▫','●','○','▸','▹','★','☆','✦','✧','•','‣','–','—','≡','∞','∑','∆','∇','∈']
+  };
+
+  let currentCat = 'num';
+
+  function renderSymbols(cat) {
+    currentCat = cat;
+    const grid = document.getElementById('spGrid');
+    grid.innerHTML = SYMBOLS[cat].map(s =>
+      `<div class="sp-sym" data-sym="${s}">${s}</div>`
+    ).join('');
+    document.querySelectorAll('.sp-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.cat === cat)
+    );
+  }
+
+  document.getElementById('btnSymbolPicker').onclick = (e) => {
+    e.stopPropagation();
+    const picker = document.getElementById('symbolPicker');
+    const isOpen = picker.classList.contains('open');
+    picker.classList.toggle('open', !isOpen);
+    if (!isOpen) renderSymbols(currentCat);
+  };
+
+  document.getElementById('spGrid').addEventListener('click', (e) => {
+    const sym = e.target.closest('.sp-sym');
+    if (!sym || !quill) return;
+    const range = quill.getSelection(true) || { index: quill.getLength() };
+    quill.insertText(range.index, sym.dataset.sym);
+    quill.setSelection(range.index + sym.dataset.sym.length);
+    quill.focus();
+    document.getElementById('symbolPicker').classList.remove('open');
+  });
+
+  document.querySelectorAll('.sp-tab').forEach(tab => {
+    tab.onclick = (e) => { e.stopPropagation(); renderSymbols(tab.dataset.cat); };
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#btnSymbolPicker') && !e.target.closest('#symbolPicker')) {
+      document.getElementById('symbolPicker').classList.remove('open');
+    }
+  });
+
+  document.getElementById('btnUndo').onclick = () => { if (quill) quill.history.undo(); };
+  document.getElementById('btnRedo').onclick = () => { if (quill) quill.history.redo(); };
+
+  // Cmd+S to save
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      saveCurrentNote();
+    }
+  });
+
+  // ── Editor footer ──
+  document.getElementById('btnSave').onclick = saveCurrentNote;
+  document.getElementById('btnDeleteNote').onclick = askDeleteNote;
+  document.getElementById('btnExportMd').onclick = exportMd;
+  document.getElementById('btnExportPdf').onclick = exportPdf;
+  document.getElementById('btnHistory').onclick = showHistory;
+
+  // ── Settings modal ──
+  document.getElementById('btnTestApi').onclick = async () => {
+    const key = document.getElementById('cfgAnthropicKey').value.trim() || S.settings.anthropicKey;
+    if (!key) { toast('Ingresa la API key primero', 'error'); return; }
+    toast('Probando conexión…', '');
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'Di solo: OK' }]
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+      toast('✅ Conexión exitosa con Anthropic', 'success');
+    } catch(e) {
+      if (e.message === 'Failed to fetch') {
+        toast('❌ No se puede alcanzar api.anthropic.com — posible bloqueo de red o VPN', 'error');
+      } else {
+        toast(`❌ ${e.message}`, 'error');
+      }
+    }
+  };
+
+  document.getElementById('btnSaveSettings').onclick = () => {
+    S.settings.githubToken = document.getElementById('cfgGithubToken').value.trim();
+    S.settings.githubOwner = document.getElementById('cfgGithubOwner').value.trim();
+    S.settings.githubRepo = document.getElementById('cfgGithubRepo').value.trim();
+    S.settings.anthropicKey = document.getElementById('cfgAnthropicKey').value.trim();
+    saveSettings();
+    closeModal('modalSettings');
+    toast('Configuración guardada ✓', 'success');
+    if (isConfigured()) loadTree();
+  };
+
+  // ── New Note modal ──
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+
+  uploadArea.onclick = (e) => {
+    e.stopPropagation();
+    fileInput.click();
+  };
+  uploadArea.ondragover = (e) => { e.preventDefault(); uploadArea.classList.add('drag'); };
+  uploadArea.ondragleave = () => uploadArea.classList.remove('drag');
+  uploadArea.ondrop = (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag');
+    if (e.dataTransfer.files[0]) setSelectedFile(e.dataTransfer.files[0]);
+  };
+
+  fileInput.onchange = (e) => {
+    if (e.target.files[0]) setSelectedFile(e.target.files[0]);
+  };
+
+  document.getElementById('btnRemoveFile').onclick = () => {
+    S.selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileSelected').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+    document.getElementById('processChoice').style.display = 'none';
+  };
+
+  document.querySelectorAll('.choice-card').forEach(card => {
+    card.onclick = () => {
+      if (card.classList.contains('disabled')) return;
+      S.processChoice = card.dataset.choice;
+      document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('claudeContextField').style.display =
+        S.processChoice === 'claude' ? 'block' : 'none';
+    };
+  });
+
+  // Notebook dropdown in new note modal
+  document.getElementById('newNoteNotebook').oninput = (e) => {
+    renderNbDropdown(e.target.value);
+  };
+  document.getElementById('newNoteNotebook').onfocus = (e) => {
+    renderNbDropdown(e.target.value);
+  };
+
+  document.getElementById('nbDropdown').addEventListener('click', (e) => {
+    const item = e.target.closest('.nb-dropdown-item');
+    if (item) {
+      document.getElementById('newNoteNotebook').value = item.dataset.nb;
+      document.getElementById('nbDropdown').classList.remove('open');
+    }
+  });
+
+  document.getElementById('btnCreateNote').onclick = handleCreateNote;
+
+  // ── Rename Nb modal ──
+  document.getElementById('btnConfirmRename').onclick = confirmRenameNb;
+
+  // ── Confirm modal ──
+  document.getElementById('btnConfirmAction').onclick = () => {
+    if (S.confirmCallback) S.confirmCallback();
+    S.confirmCallback = null;
+  };
+
+  // Modal close buttons - direct binding
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeModal(btn.dataset.close);
+    });
+  });
+
+  // Close on overlay background click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+
+  // Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+      document.getElementById('ctxMenu').classList.remove('open');
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+async function init() {
+  loadSettings();
+  bindEvents();
+
+  // Set default date
+  document.getElementById('newNoteDate').value = todayISO();
+
+  if (!isConfigured()) {
+    // First run — open settings
+    openModal('modalSettings');
+    toast('Configura tu cuenta GitHub para comenzar', '');
+    renderSidebar();
+    return;
+  }
+
+  await loadTree();
+}
+
+// Start
+init();
+</script>
+</body>
+</html>
