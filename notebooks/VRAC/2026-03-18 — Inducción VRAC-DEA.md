@@ -1,4 +1,4 @@
-# Inducción VRAC-DEA
+# Inducción VRAC-DEA (Dirección Efectividad Académica)
 
 **Fecha:** 18/03/26
 
