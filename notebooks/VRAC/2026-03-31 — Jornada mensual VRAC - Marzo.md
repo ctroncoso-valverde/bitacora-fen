@@ -67,7 +67,7 @@ ii) Modelo 'nuevo': debería venir con estándares de calidad 'por defecto'
 -   ⚠️ Hay que chequear que todo funcione como dice que funciona. No dejar nada al azar (por ejemplo, que estén DUN correctos, etc).
 -   **Responsabilidad del DAC de cada facultad**
 
-> **(QM: Quality Match)**
+> **(QM: Quality Matters)**
 
 -   → Esto es tarea prioritaria (pre-postgrado)
 -   → Verificar si están de acuerdo a prog. de estud. y cómo están funcionando; esto es fundamental. Otra cosa clave es **claridad de decretos**
