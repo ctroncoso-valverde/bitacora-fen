@@ -183,13 +183,12 @@ ii) Modelo 'nuevo': debería venir con estándares de calidad 'por defecto'
 2.  Fase 1
 3.  Fase 2
 
--   → Informes en revisión (Hechos y Claude)
--   → **Fase 2:** incluir programas que no fueron incluidos
--   📅 **Oct:** 156 informes (aprox 90% info necesaria)
--   → Fin "secundario" → otros fines de autoevaluación
--   → Revisar informes respecto a consonancia y endurece
--   Ej: decretos como corresponde
--   → Revisar hechos y llevar aquello no aceptable a aceptable
+-   → Informes en revisión por DACs
+-   → **Fase 2:** incluir programas que no fueron incluidos. Idea es que en Octubre tengamos (la unidad a cargo) 156 informes con aprox 90% info necesaria.
+-   → Fin "secundario" de estos informes → ser un instrumento con fines de autoevaluación para cada carrera
+-   → Que debo hacer? → Revisar informes respecto a consonancia y datos.
+-   Decretos como corresponde
+-   Revisar hechos y llevar aquello no aceptable a aceptable
 -   → **Idea:** tener assessment de programa
 
 ### 4 dimensiones SAIC
@@ -199,22 +198,19 @@ ii) Modelo 'nuevo': debería venir con estándares de calidad 'por defecto'
 ## Fernando (?)
 
 -   → Cerrar PE para comenzar el nuevo
-
-### Generación de Reportes
-
--   → Más allá de dashboards
+-   → Generación de Reportes que vayan más allá de dashboards
 -   → **Rankings:** contratar BD para gestionar QS
 -   → Sitio checkpoint donde hay dashboard
 -   → Enviará link c/todo lo que tiene
 
 ## Varios
 
-### UNAB Externaliza
+### Eventos UNAB
 
--   Eventos, producción (unidad), todo de la Pere
--   → Todo a través de Paola Jaruf, por medio de Viameet
+-   Eventos, producción (unidad), toda la unidad desaparece de UNAB y se externaliza.
+-   De ahora en adelante todo requerimiento se hará a través de Vicerrectora quien gestionará con Paola Jaruf (comunicaciones)
 
-### 2 Eventos:
+### 2 Eventos VRAC:
 
 1.  Encuentro Calidad
 2.  Congreso
@@ -222,29 +218,28 @@ ii) Modelo 'nuevo': debería venir con estándares de calidad 'por defecto'
 -   ⚠️ Solicitudes c/mucha anticipación (por ej: afiches y eso)
 -   → Informes mensuales de actividades x equipo y DAC
 
-### SAIC a cargo (Nayadeth)
+### SAIC (Nayadeth)
 
--   Para info mensuales
+-   A cargo del tema de info mensuales
 -   Se definirá formato luego (desde abril)
 
 ### Info en desarrollo:
 
--   ⚠️ Modelo online tipo FAV va en camino (advance)
+-   ⚠️ Modelo online tipo FEN va en camino (advance)
 
-### SPIC: Planes de mejora
+### SAIC: Planes de mejora
 
--   Cargo de ellos
 -   → Nueva plataforma para planes de mejoras
 -   Seguimiento - monitoreo
 -   Más quali (incluye elem.)
--   2 módulos:
+-   2 Módulos:
 
 1.  Para asesorar desarrollo de estos planes (propuestas)
 2.  Para nutrir módulo 2
 
 -   Optimizar procesos
 
-### VRiD
+### VRID
 
 -   → Proyecto c/forme productividad de académicos
 
