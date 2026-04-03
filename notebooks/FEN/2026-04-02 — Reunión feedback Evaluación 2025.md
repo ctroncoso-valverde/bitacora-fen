@@ -4,7 +4,9 @@
 
 ## 📌 Contexto
 
--   NG presentó su evaluación (info para) a Comité (Snoce, Rock, Dean, Freddy y NG) y analizaron.
+-   A la reunión (online) asistieron Freddy Coronado como director de depto actual y Nicolas Garrido como director saliente.
+-   El 2025 fui evaluado como prof investigador; por eso es el dir de depto quien debe llevar mi proceso.
+-   Freddy me da contexto: dice que NG presentó su evaluación a la comisión (Aroca, Rock, Decano, Freddy y NG) para que la analizaran. NG corrige y dice que el solo presentó información, no evaluación. Versión de Freddy es consistente con lo que me dijo el decano en la reunión donde me dijo que sería DAC.
 
 ## ⚠️ 2 Discrepancias identificadas
 
