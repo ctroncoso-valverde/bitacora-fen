@@ -21,3 +21,10 @@
 > Freddy manifiesta dudas al leer mi detalle en evaluación, pero NG responde que esto es lo que se espera de un investigador con agenda activa, por eso la nota 3. No respondo a esto.
 
 > Freddy ofrece 'apoyo' para que mi agenda no se caiga. Respondo que yo seguiré empujando mi agenda por un tema personal, más allá de lo que la institución me apoye.
+
+## 📌 Otros
+
+-   A partir de 2026 mi evaluación la hará el Decano junto con la Vicerrectora.
+-   Freddy tratará de aclarar bien el tema de mis horas (cuanto es de la FEN y cuando de la VRAC). Yo le manifiesto que a ese nivel de granularidad, no tengo clara la repartición de la horas.
+
+#
