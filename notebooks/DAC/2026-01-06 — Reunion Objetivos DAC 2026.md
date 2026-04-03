@@ -2,14 +2,17 @@
 
 **Fecha:** 06/01/26
 
+📌 **Aspectos general de la reunión**
+
 -   El objetivo de esta reunión fue determinar, a grosso modo, los objetivos de mi puesto como DAC FEN para el 2026.
 -   La reunión fue entre Vicerrectora VRAC y yo.
 -   Mi cargo es matricial donde el 70% de mi tiempo/esfuerzo corresponde a la VRAC, y el 30% restante a la FEN.
 -   En la VRAC reporto a la vicerrectora mientras que en la FEN reporto al decano.
--     
-    
+-   Una petición expresa de la vicerrectora es que me empodere del cargo, que significa darle la importancia que merece dentro, por ejemplo, del consejo de facultad.
+-   Debo mostrar liderazgo.
+-   Vicerrectora me dice que debo ir al menos una vez por mes a Santiago para participar de consejo de facultad (mañana) y agendar la mayor cantidad de reuniones el resto del día.
 
-## 📌 Focos Principales
+## 📌 Focos Principales de mi gestión este 2026
 
 ### ① Primer Foco: Acreditación AACSB
 
